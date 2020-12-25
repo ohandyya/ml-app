@@ -130,7 +130,7 @@ dmypy.json
 
 
 # Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # VS code
-.vscode
+.vscode/
