@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "/Users/atseng/.envs/p38/bin/python",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true
+}
