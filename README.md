@@ -78,11 +78,47 @@
 
 ### Backend 2: non-realtime prediction
 
-TBD
+- We serve non-realtime prediction by desining it as a `ECS Fargate task`. Once it is started, it will query DynamoDB to find all the new jobs. It will work on the new jobs, and update DynamoDB and/or S3 with the result. When all jobs are done, it will terminate itself.
+
+- There is NO service to manage this task. When user submit a non-realtime job from the UI, the frontend will send this new job information to DynamoDB and `run` the non-realtime task. And cone the task is done, it will terminate itself. This is a very good way to run complex machine jobs without keeping a big long-running machine.
+
+- And since it is based on docker image, we can test the code locally, and only upload it once it works.
 
 ### Advantages of this architecture
 
-TBD
+1. Serverless
+
+    - All the components in the architecdture are serverless. So this means we do not need to manage any instances or servers.
+
+2. Scalable
+
+    - The whole architecture is highly scalable. 
+
+    - If there are too many users accessing UI, we can simply increase the number of frontend tasks (configurable from ECS service definition). There is no interuption to the user as user access UI via ALB.
+
+    - For realtime prediction, it is served by Lambda. So it is scalable by default.
+
+    - For non-realtime prediction, it is a batch processing. So user expect to have some delay.
+
+    - For data store, DynamoDB and S3 are scalable by design. And in case there are too many activities, we can increase the RSU and WSU for DynamoDB table.
+
+3. Relatively easy to set up for a single research/data scientist
+
+    - The `easiest` way to set up machine learning application is to createa a VM, and run all tasks on that single VM. This is the classical architecture, which we know works. However, this architecture is not scalable by design. It is not falt tolerant, and require a lot of maintanance (like manually restart the server, etc).
+
+    - The `ideal` way to set up machine learning application is to pair up data scientist with DevOps. Data scientist is responsible for the core prediction logic, and the devop is responsible for the infrastructure and day-to-day maintenance. Usually, the application is built and deployed via Kubernetes. Since everything can be customized in Kubernetes, you can create a scalable and relible system. However, this require a team and is usually very time consuming.
+
+    - Therefore, if we want a scalable ML system that a single data scientist can build, the architecture proposed here is a good solution. It extensivly leverage AWS manged service, but at the same time proivdes enough flexibility to build our application.
+
+    - In terms of the knowledge required, it is not zero but also not too complicated.
+
+        - Docker
+
+        - AWS services: ECR, ECS, Lambda, DynamoDB, S3, ALB
+
+        - Frontend framework (I use treamlit with Python as the frontend framework)
+
+        - ML prediction (this is what every data scientists already know)
 
 ## Development Workflow
 
@@ -101,6 +137,8 @@ For our backend-application, it only runs if there is new jobs to work on. So th
 ## Others
 
 ### Lessons Learned
+
+1. Error handling in the code
 
 ### Useful information
 
