@@ -1,4 +1,4 @@
-# Machine Learning Application
+# A Simple Framework for Creating Machine Learning Application
 
 ## Goal
 
@@ -17,6 +17,20 @@
   - The application shoudl be `cost effective`. In other words, we want to seperate long-running tasks (such as UI frontend) and short-lived compute engine (such as the prediction services). To control the cost, we should NOT createa BIG machine that hosts everything, as it will be expensive.
 
   - We are `research scientists`. We have greate math skill and can create algorithms to solve business problems. However, we need to way to quickly show the world our achievement.
+
+- Targeted user:
+
+  - A research scientist looking for setting up machine learing application.
+
+  - Assumption on the background of the research scientist
+
+    - The only programming language you know (or you want to use) is Python.
+
+    - You are good at machine learning. You are comfortable with using various packages to create machine learning algorithms.
+
+    - You are okay at Docker and AWS resources. But you are not the expert of these areas.
+
+    - You don't have the ability to write UI using JavaScript/HTML/CSS.
 
 ## Architecture
 
