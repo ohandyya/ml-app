@@ -174,6 +174,34 @@ def submit_request(requestID: str, gender: str, tstart: datetime.date, tend: dat
     }
 
 
+def is_any_running_backend_ecs_task(ecs_client) -> bool:
+    """Check if there is any ECS backend task with desiredStatus = "RUNNING"
+
+    Args:
+        ecs_client ([type]): [description]
+
+    Returns:
+        bool:
+            True: there is at least one task with desiredStatus = "RUNNING"
+            False: otherwise
+    """
+    try:
+        response = ecs_client.list_tasks(
+            cluster="ml-app-frontend",
+            family="ml_app_backend",
+            desiredStatus="RUNNING",
+        )
+    except Exception as e:
+        logger.error(
+            f"Failed to call ecs_client.list_tasks(...). Exception message: {e}")
+        return False
+    else:
+        num_tasks = len(response.get('taskArns', []))
+        logger.info(
+            f"There are {num_tasks} ml_app_backend tasks with desiredStatus = 'RUNNING'")
+        return num_tasks > 0
+
+
 def run_backend_ecs_tasks(ecs_client):
     """Run backend ECS tasks
 
@@ -279,7 +307,7 @@ def plan_daily_activity(session_state):
             #submit_request(req_id, gender, tstart, tend, session_state)
             ok = submit_request_dynamodb(req_id, gender, tstart,
                                          tend, session_state.dynamodb_client)
-            if ok:
+            if ok and not is_any_running_backend_ecs_task(session_state.ecs_client):
                 run_backend_ecs_tasks(session_state.ecs_client)
 
 
