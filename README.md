@@ -16,12 +16,11 @@
 
   - We are `research scientists`. We have greate math skill and can create algorithms to solve business problems. However, we need to way to quickly show the world our achievement.
 
-
 ## Architecture Overview
 
 [Google drawing source](https://docs.google.com/drawings/d/1XFEogSXvjYJVDbUxh9cotJs3w1R5XU13H00o495ZPfk/edit?usp=sharing)
 
-<p align="center"><img src="ml-app-architecture.jpg" height="700px" /></p>
+![Architecture](ml-app-architecture.jpg)
 
 
 ## Techincal Details
