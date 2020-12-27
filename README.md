@@ -22,6 +22,8 @@
 
 [Source](https://docs.google.com/drawings/d/1XFEogSXvjYJVDbUxh9cotJs3w1R5XU13H00o495ZPfk/edit?usp=sharing)
 
+[Sample machine learning application](http://ml-app-alb-1112199550.us-east-1.elb.amazonaws.com:8501/)
+
 ![Architecture](ml-app-architecture.jpg)
 
 ### Components
@@ -122,17 +124,83 @@
 
 ## Development Workflow
 
-TBD
+As a single data scientist, have a easy-to-follow workflow is important. Below is a workflow that I use for this project.
+
+### Phase 1: locally development
+
+1. [Cloud][One time] Create DynamoDB table and S3 bucket
+
+2. [Local] Create, build, and test frontend UI docker image locally
+
+    - Since DynamoDB table and S3 bucket are already created, you can test your code by accessing these services.
+
+3. [Local] Create, build, and test realtime prediction docker image locally
+
+    - Since the realtime docker will be ran on Lambda, you should use the [AWS Lambda emulator](https://aws.amazon.com/blogs/aws/new-for-aws-lambda-container-image-support/) for local testing.
+
+    - Since DynamoDB table and S3 bucket are already created, you can test your code by accessing these services.
+
+4. [Local] Create, built, and test non-reasltime prediction docker image locally
+
+    - Since DynamoDB table and S3 bucket are already created, you can test your code by accessing these services.
+
+### Phase 2: Bring up cloud service
+
+After phase 1, you have all the docker images ready, and have verified that they are working locally. In phase 2, we will push them to AWS and bring up cloud services.
+
+5. [Cloud] Deploy frontend to ECS Fargate
+
+    - Upload the latest frontend docker image to ECR
+
+        - See `make upload_frontend` for example.
+
+    - Create a ECS Fargate task definition to the latest frontend docker image
+
+        - If you want to change the environment variables or change the port, then you need to modify the existing ECS Fargate task by creating a new revision
+
+    - Create a ECS Fargate cluster
+
+    - Create a ECS Fargate service in the created cluster
+
+        - During service creation, you will need to associate it to an ALB. Setting up ALB is tricky as it is very to get wrong with security group or ports.
+
+        - Test and see if you, as a user, can access the ALB. If you cannot, it is most likely due to  VPC, subnet, role/permission, or security group setup.
+
+        - If you update the ECS Fargate task (say, a new version), then you need to update the service.
+
+6. [Cloud] Deploy realtime prediction to Lambda
+
+    - Upload the latest realtime prediction docker image to ECR
+
+        - See `upload_lambda` for example.
+
+    - Create a Lambda function baesd on ECR docker image.
+
+    - Test the Lambda function from AWS Lambda UI. If there is any error, stsop here and debug. Since we have already verify the realtime prediction works locally, the most common errors are VPC, subnet, role/permission, security group. If you log all exceptions when accessing AWS resources, you should be able to find out what's the problem from clodu watch log.
+
+7. [Cloud] Deploy non-realtime prediction to ECS Fargate
+
+    - Upload the latest non-realtime docker image to ECR
+
+        -  See `make upload_backend` for example.
+
+    - Create a ECS Fargate task definition to the latest frontend docker image
+
+    - Manually start the ECS task, and see if it is working as expected. If not, look at the cloud watch logs to debug.
+
+Congragulation! You have a serverless machine learning application up and running! 
 
 ## Operation Cost
 
 See [AWS Fargate pricing](https://aws.amazon.com/fargate/pricing/) for the up-to-date cost.
 
-For the frontend, we hav a very lightweight frontend (0.5 GB of RAM and 0.25 vCPU). Assuming we run this task 24 hours for 30 days, the total cost is $8.88 USD.
+- For the frontend, we hav a very lightweight frontend (0.5 GB of RAM and 0.25 vCPU). Assuming we run this task 24 hours for 30 days, the total cost is $8.88 USD.
 
-For the DynamoDB, we have only 2 RCU and 2 WCU. The monthly cost is about $1.17 USD.
+- For the DynamoDB, we have only 2 RCU and 2 WCU. The monthly cost is about $1.17 USD.
 
-For our backend-application, it only runs if there is new jobs to work on. So the cost is negligible.
+- For the non-realtime task, it only runs if there is new jobs to work on. So the cost is negligible.
+
+- For the realtime task, our current code uses only 128 MB of RAM and is completed within 100 ms. So the cost is neglible.
 
 ## Others
 
@@ -140,8 +208,63 @@ For our backend-application, it only runs if there is new jobs to work on. So th
 
 1. Error handling in the code
 
+2. Important configuration parameters when defining ECS Fargate task
+
+    - Environment varaibles
+
+        - In our example, the UI ask user to input a `password`. Instead of hard coded the expected password in the code, we put it in the environment variable. Admittedly, this is not the `correct` way for doing user authentication, but it is easy to do and serves our purpose.
+
+    - Port to open
+
+        - In our example, streamlit is launched on port 8501. So we need to open port 8501
+
+3. Important configuration parametres when creating ECS service
+
+    - Load balancer
+
+        - Load balance HAS to be configured during service creation time. See [this article](https://appfleet.com/blog/route-traffic-to-aws-ecs-using-application-load-balancer/) for how to createa a ALB for ECS. It will createa a target group, which is the target group that the ALB shoudl rote the traffic to. In my example, it is called `ecs-ml-app-ml-app-frontend-alb` (the naming is going to be different for you).
+
+        - In the load balancer, check the `Listeners`. It should ruote the traffic to the target group associated to your ECS sercie (in my case, `ecs-ml-app-ml-app-frontend-alb`).
+
+    - Security group
+
+        - Make sure the security group associated to this service has the required input port open. In particular, this security group shoudl allow all trafic on all ports from the ALB. This is the ensure the the tasks created by this ECS service can accept inbound traffic from the ALB.
+
+4. Important configuration parametres when creating Lambda function
+
+    - The docker image URL to use from ECR
+
+    - Environment variables
+
+5. You should expect accessing AWS resouce may fail (and it will)
+
+    - We should accessing AWS resource to fail. There are a lot of reasons that it may fail. The common ones are:
+
+        1. Insufficnet permission (usually tied to execution role and permission)
+
+        2. Cannot establish the connection (usually ties to VPC, subnet, or security group)
+
+        3. Transient network failure
+
+    - For EVERY AWS resrouces access, you should wrap it in try-except block and log the exception.
+
+        ```python
+        try:
+            <do something related to accessing AWS resources>
+        except Exception as e:
+            logger.error(f"Failed to do .... Exception message: {e}")
+        ```
+
+        Since ECS tasks and Lambda function write log to cloud watch, you can use cloud watch to look for the logs and to identify what's wrong with your code.
+
+        Good logging is expecially important for serverless application because there is no persistent instances that you can log in and debug. You have to rely on the log mesage.
+
+    - If possible, implement eponential re-try mechnism.
+
 ### Useful information
 
-- Add Application Load Balancer (ALB) to ECS Service
+- [Serving a Machine Learning Model with FastAPI and Streamlit](https://testdriven.io/blog/fastapi-streamlit/)
 
-    - https://appfleet.com/blog/route-traffic-to-aws-ecs-using-application-load-balancer/
+- [How to Build an AWS Lambda for Data Science](https://towardsdatascience.com/how-to-build-an-aws-lambda-for-data-science-cec62deaf0e9)
+
+- [Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)

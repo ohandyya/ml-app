@@ -466,18 +466,17 @@ def main(session_state):
 if __name__ == "__main__":
     if password == PASSWORD:
         logger.info("User entered the correct password")
-        lambda_client = boto3.client('lambda', region_name=LAMBDA_REGION)
-        dynamodb_client = boto3.client('dynamodb', region_name=REGION)
-        s3_client = boto3.client('s3', region_name=REGION)
-        ecs_client = boto3.client('ecs', region_name=REGION)
         session_state = SessionState.get(
             act_db=INIT_ACTIVITY_DB,
             requests=dict(),
-            lambda_client=lambda_client,
-            dynamodb_client=dynamodb_client,
-            s3_client=s3_client,
-            ecs_client=ecs_client
         )
+        session_state.lambda_client = boto3.client(
+            'lambda', region_name=LAMBDA_REGION)
+        session_state.dynamodb_client = boto3.client(
+            'dynamodb', region_name=REGION)
+        session_state.s3_client = boto3.client('s3', region_name=REGION)
+        session_state.ecs_client = boto3.client('ecs', region_name=REGION)
+
         main(session_state)
     else:
         logger.info(f"Wrong password entered: {password}")
