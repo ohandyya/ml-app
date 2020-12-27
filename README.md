@@ -206,11 +206,13 @@ Congragulation! You have a serverless machine learning application up and runnin
 
 ## Operation Cost
 
-See [AWS Fargate pricing](https://aws.amazon.com/fargate/pricing/) for the up-to-date cost.
-
 - For the frontend, we hav a very lightweight frontend (0.5 GB of RAM and 0.25 vCPU). Assuming we run this task 24 hours for 30 days, the total cost is $8.88 USD.
 
+  - See [AWS Fargate pricing](https://aws.amazon.com/fargate/pricing/) for the up-to-date cost.
+
 - For the DynamoDB, we have only 2 RCU and 2 WCU. The monthly cost is about $1.17 USD.
+
+  - In DynamoDB, there are two capacity mode. The first one is `Provisioned`, and the second one is `On-demand`. To get an estimate of the cost, try this [DynamoDB Pricing Calculator](https://dynobase.dev/dynamodb-pricing-calculator/).
 
 - For the non-realtime task, it only runs if there is new jobs to work on. So the cost is negligible.
 
@@ -274,6 +276,18 @@ See [AWS Fargate pricing](https://aws.amazon.com/fargate/pricing/) for the up-to
         Good logging is expecially important for serverless application because there is no persistent instances that you can log in and debug. You have to rely on the log mesage.
 
     - If possible, implement eponential re-try mechnism.
+
+6. Why we use both DynamoDB and S3 for storing data?
+
+   There are two reasons for using both DynamoDB and S3.
+
+    1. Use S3 to reduce DynamoDB cost
+
+        - DynamoDB is charged by how frequency you read/write to table and the size of the data. Therefore, for big size data, we store the atual data in S3 and store the bucket/key in DynamoDB. In this way, we keep the data in DynamoDB small, and keep all the big data in S3, which is way cheaper.
+
+    2. Use DynamoDB for efficient query
+
+        - One may say: if the goal is to reduce cost, why not store all data in S3. Theoretically, it is possible, but querying from DynamoDB is way faster then reading from S3.
 
 ### Useful information
 
