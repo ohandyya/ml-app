@@ -24,13 +24,17 @@
 
   - Assumption on the background of the research scientist
 
-    - The only programming language you know (or you want to use) is Python.
+    - You are good at machine learning. You are comfortable with using various packages of to create machine learning algorithms.
 
-    - You are good at machine learning. You are comfortable with using various packages to create machine learning algorithms.
+    - You are good at Python.
 
     - You are okay at Docker and AWS resources. But you are not the expert of these areas.
 
-    - You don't have the ability to write UI using JavaScript/HTML/CSS.
+    - You don't have the skill to write professional UI using JavaScript/HTML/CSS.
+
+- System Expectation
+
+TBD
 
 ## Architecture
 
@@ -135,6 +139,10 @@
         - Frontend framework (I use treamlit with Python as the frontend framework)
 
         - ML prediction (this is what every data scientists already know)
+
+4. Loose coupling
+
+TBD
 
 ## Development Workflow
 
@@ -296,3 +304,5 @@ Congragulation! You have a serverless machine learning application up and runnin
 - [How to Build an AWS Lambda for Data Science](https://towardsdatascience.com/how-to-build-an-aws-lambda-for-data-science-cec62deaf0e9)
 
 - [Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+
+- [Boto3.ipynb](Boto3.ipynb) is Jupyter notebook that contains some sample usages of boto3 SDK.
