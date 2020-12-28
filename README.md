@@ -1,6 +1,22 @@
 # A Simple Framework for Creating Machine Learning Application
 
-## Goal
+## Introduction
+
+### User Story
+
+- As a data scientist, I solve business problems by applying machine learning algorithms. Solving problem is not a problem for me. However, after I have developped the algorithm, I am having difficulty to prototype my algorihtm to demonstrate its value to stakeholders for several reasons.
+
+- First, I don't have engineering resouces to build the UI and backend infrastructure for my algorihtm prorotype. Second, because the algorithm is still preliminary and is constantly changing/evolving, it is VERY difficult to work with other engineers to build the prototype system. You cannot ask an engineering team to build a system where the core algorithm is changing on a weekly basis, if not daily.
+
+- Therefore, I need a framework to:
+
+    1. Build a machine leawring application prototype system, including UI, database, and network infrastructure, `all by myself`. And it should be `easy to do` and require only `minimal maintenance`. I just want to use minimal effort to build a workable prototype that can demonstrate/provide value.
+
+    2. Perform `quick iterations` of the algorithms.
+
+    3. Allow stackholders (mostly non-technical internal users) to `use the application from UI` and provide feedback.
+
+### Goal
 
 - An `serverless architecture` for hosting `machine learning prototype` that are `scalable`, `easily maintaiable`, and `cost effective` for `research scientists`.
 
@@ -18,23 +34,35 @@
 
   - We are `research scientists`. We have greate math skill and can create algorithms to solve business problems. However, we need to way to quickly show the world our achievement.
 
-- Targeted user:
+### Targeted user
 
-  - A research scientist looking for setting up machine learing application.
+- You are a research scientist looking for a easy way to create a machine learing application prototype.
 
-  - Assumption on the background of the research scientist
+- You are good at machine learning. You are comfortable with using various packages of to create machine learning algorithms.
 
-    - You are good at machine learning. You are comfortable with using various packages of to create machine learning algorithms.
+- You are comfortable working with Python, Makefile, Docker, and AWS resrouces.
 
-    - You are good at Python.
+- You dp NOT need to have the skill to write professional UI using JavaScript/HTML/CSS. But of course, if you know, it is better.
 
-    - You are okay at Docker and AWS resources. But you are not the expert of these areas.
+### Framework Expectation
 
-    - You don't have the skill to write professional UI using JavaScript/HTML/CSS.
+We expect the framework to deliver the following characteristics.
 
-- System Expectation
+1. All applications are dockerized, and should be able to developped locally, and tested locally.
 
-TBD
+    - We want all applications to be dockertized for reproducibility ease of sharing.
+
+    - Assuming we have two machine learing algorihtms and a UI frontend. They should be dockerized indepenedently, which means they can different dependency requirements.
+
+    - Since we are in the early stage of developing the whole system, it is EXPECTED to make errors and/or change algorithms. Therefore, to reduce the friction of development cycle, we need all aogirhtms to be able to run locally and tested locally.
+
+2. We want a framework that are flexible (loosely coupled)
+
+    - To promote loosely coupling, we assume different contaienrs do NOT talk to each other directly. There communcation are through 3rd party, such as DynamoDB, AWS CLI, or S3. While this may not be the most efficient way compared to a mdssage bus architecture, this assumption simplies the architecgture complexity significantly.
+
+3. We want a framework that is serverless.
+
+    - As a data scientist, I am NOT interested in maintaining infrastructure. So I prefer serverelss architecture so that the infrastructure maintanance is handled by the service provider such as AWS.
 
 ## Architecture
 
@@ -142,7 +170,9 @@ TBD
 
 4. Loose coupling
 
-TBD
+    - In this architecture, we have one (or multiple) containers for UI, a container (in the form of Lambda function) for realtime prediction, a container (in the form of ECS Faragte task) for non-realtime prediction. They are `loosely coupled`, as there is no direct connection among them. All the communcation are through AWS CLI, DynamoDB, and S3.
+
+    - The benefit of this is that we do not need to implement a common message bus, which is a population architecture for production-grade Kubernete cluster. However, it is too complex (at least for me). 
 
 ## Development Workflow
 
@@ -230,7 +260,9 @@ Congragulation! You have a serverless machine learning application up and runnin
 
 ### Lessons Learned
 
-1. Error handling in the code
+1. Define constants, especially values realted to AWS resouces, in a `constants.py` file.
+
+    - In this framework, we use various AWS resources when using boto3. Since the arn/name/version of these AWS resources may change, we should define than in `constants.py`, which will make our life easier when there is any change.
 
 2. Important configuration parameters when defining ECS Fargate task
 
@@ -305,4 +337,4 @@ Congragulation! You have a serverless machine learning application up and runnin
 
 - [Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
 
-- [Boto3.ipynb](Boto3.ipynb) is Jupyter notebook that contains some sample usages of boto3 SDK.
+- [Boto3.ipynb](Boto3.ipynb) is a Jupyter notebook that contains some sample usages of boto3 SDK.
