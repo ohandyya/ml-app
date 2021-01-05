@@ -70,6 +70,8 @@ We expect the framework to deliver the following characteristics.
 
 [Sample machine learning application](http://ml-app-alb-1112199550.us-east-1.elb.amazonaws.com:8501/)
 
+- If you get 503, it probably means I turned off the service to reduce cost.
+
 ![Architecture](ml-app-architecture.jpg)
 
 ### Components
